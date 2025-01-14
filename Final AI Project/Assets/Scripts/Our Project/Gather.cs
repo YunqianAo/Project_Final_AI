@@ -8,20 +8,32 @@ using UnityEngine;
 [Action("Behavior/Gather")]
 public class Gather : BasePrimitiveAction
 {
-    public GameObject agent;
-    public Transform gatherPoint;
-    public float moveSpeed = 5f;
+    [InParam("vehicle")]
+    public GameObject vehicle;
+
+    [InParam("gatherPoint")]
+    public Vector3 gatherPoint;
+
+    [InParam("speed")]
+    public float speed = 10f;
+
+    private VehicleController vehicleController;
+
+    public override void OnStart()
+    {
+        if (vehicle != null)
+        {
+            vehicleController = vehicle.GetComponent<VehicleController>();
+        }
+    }
 
     public override TaskStatus OnUpdate()
     {
-        Vector3 direction = (gatherPoint.position - agent.transform.position).normalized;
-        agent.transform.position += direction * moveSpeed * Time.deltaTime;
+        if (vehicleController == null) return TaskStatus.FAILED;
 
-        if (Vector3.Distance(agent.transform.position, gatherPoint.position) < 1f)
-        {
-            return TaskStatus.COMPLETED;
-        }
+        // 移动到鼠标点击位置
+        Vector3 direction = (gatherPoint - vehicle.transform.position).normalized;
+        vehicleController.Move(direction, 0);
         return TaskStatus.RUNNING;
     }
 }
-
