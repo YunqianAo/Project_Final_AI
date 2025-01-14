@@ -9,8 +9,11 @@ using UnityEngine;
 [Action("Behavior/Wander")]
 public class Wander : BasePrimitiveAction
 {
+    [InParam("agent")] // 动作执行的角色（GameObject）
     public GameObject agent;
-    public float moveSpeed = 5f;
+
+    [InParam("moveSpeed")] // 角色的移动速度
+    public float moveSpeed;
 
     public override void OnStart()
     {
