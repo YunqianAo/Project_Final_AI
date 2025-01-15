@@ -9,12 +9,15 @@ using UnityEngine;
 public class Shoot : BasePrimitiveAction
 {
     [InParam("vehicle")]
+    [SerializeField]
     public GameObject vehicle;
 
     [InParam("enemy")]
+    [SerializeField]
     public GameObject enemy;
 
     [InParam("bulletPrefab")]
+    [SerializeField]
     public GameObject bulletPrefab;
 
     [InParam("shootForce")]

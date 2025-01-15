@@ -2,7 +2,7 @@ using Pada1.BBCore.Framework;
 using Pada1.BBCore;
 using UnityEngine;
 
-[Condition("Detection/EnemyDetected")]
+[Condition("Check/EnemyDetected")]
 public class EnemyDetected : ConditionBase
 {
     [InParam("vehicle")]
@@ -16,9 +16,7 @@ public class EnemyDetected : ConditionBase
 
     public override bool Check()
     {
-        if (vehicle == null || enemy == null) return false;
-
-        float distance = Vector3.Distance(vehicle.transform.position, enemy.transform.position);
-        return distance <= detectionRange;
+        return Vector3.Distance(vehicle.transform.position, enemy.transform.position) <= detectionRange;
     }
 }
+

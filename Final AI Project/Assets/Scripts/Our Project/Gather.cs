@@ -1,31 +1,38 @@
+using UnityEngine;
+using UnityEngine.AI;
+using Pada1.BBCore.Tasks;
 using Pada1.BBCore.Framework;
 using Pada1.BBCore;
-using Pada1.BBCore.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
-[Action("Vehicle/Gather")]
+[Action("NavMesh/Gather")]
 public class Gather : BasePrimitiveAction
 {
     [InParam("vehicle")]
     public GameObject vehicle;
 
-    [InParam("targetPosition")]
-    public Vector3 targetPosition;
+    [InParam("gatherTarget")]
+    public Vector3 gatherTarget;
+
+    private NavMeshAgent agent;
+
+    public override void OnStart()
+    {
+        if (vehicle != null)
+        {
+            agent = vehicle.GetComponent<NavMeshAgent>();
+        }
+    }
 
     public override TaskStatus OnUpdate()
     {
-        if (vehicle == null) return TaskStatus.FAILED;
+        if (agent == null) return TaskStatus.FAILED;
 
-        Vector3 direction = (targetPosition - vehicle.transform.position).normalized;
-        vehicle.transform.Translate(direction * Time.deltaTime * 5f);
+        agent.SetDestination(gatherTarget);
 
-        if (Vector3.Distance(vehicle.transform.position, targetPosition) < 1f)
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             return TaskStatus.COMPLETED;
         }
-
         return TaskStatus.RUNNING;
     }
 }

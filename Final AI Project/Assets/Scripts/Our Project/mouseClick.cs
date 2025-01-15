@@ -2,11 +2,11 @@ using Pada1.BBCore.Framework;
 using Pada1.BBCore;
 using UnityEngine;
 
-[Condition("Input/MouseClick")]
-public class MouseClick : ConditionBase
+[Condition("Check/MouseClickCondition")]
+public class MouseClickCondition : ConditionBase
 {
-    [OutParam("clickPosition")]
-    public Vector3 clickPosition;
+    [OutParam("gatherTarget")]
+    public Vector3 gatherTarget;
 
     public override bool Check()
     {
@@ -15,7 +15,7 @@ public class MouseClick : ConditionBase
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                clickPosition = hit.point;
+                gatherTarget = hit.point;
                 return true;
             }
         }

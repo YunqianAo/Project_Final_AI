@@ -1,44 +1,40 @@
-using Pada1.BBCore;
+using UnityEngine;
+using UnityEngine.AI;
 using Pada1.BBCore.Tasks;
 using Pada1.BBCore.Framework;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using Pada1.BBCore;
 
-
-[Action("Vehicle/Wander")]
+[Action("NavMesh/Wander")]
 public class Wander : BasePrimitiveAction
 {
     [InParam("vehicle")]
     public GameObject vehicle;
 
-    [InParam("speed")]
-    public float speed = 5f;
+    [InParam("wanderRadius")]
+    public float wanderRadius = 10f;
 
-    private Vector3 targetPosition;
+    private NavMeshAgent agent;
 
     public override void OnStart()
     {
-        SetRandomTarget();
+        if (vehicle != null)
+        {
+            agent = vehicle.GetComponent<NavMeshAgent>();
+        }
     }
 
     public override TaskStatus OnUpdate()
     {
-        if (vehicle == null) return TaskStatus.FAILED;
+        if (agent == null) return TaskStatus.FAILED;
 
-        Vector3 direction = (targetPosition - vehicle.transform.position).normalized;
-        vehicle.transform.Translate(direction * speed * Time.deltaTime);
+        Vector3 randomDirection = Random.insideUnitSphere * wanderRadius;
+        randomDirection += vehicle.transform.position;
 
-        if (Vector3.Distance(vehicle.transform.position, targetPosition) < 1f)
+        if (NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
         {
-            SetRandomTarget();
+            agent.SetDestination(hit.position);
+            return TaskStatus.RUNNING;
         }
-
-        return TaskStatus.RUNNING;
-    }
-
-    private void SetRandomTarget()
-    {
-        targetPosition = new Vector3(Random.Range(-10f, 10f), 0, Random.Range(-10f, 10f));
+        return TaskStatus.FAILED;
     }
 }
