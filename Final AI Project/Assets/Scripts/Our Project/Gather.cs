@@ -5,35 +5,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Action("Behavior/Gather")]
+[Action("Vehicle/Gather")]
 public class Gather : BasePrimitiveAction
 {
     [InParam("vehicle")]
     public GameObject vehicle;
 
-    [InParam("gatherPoint")]
-    public Vector3 gatherPoint;
-
-    [InParam("speed")]
-    public float speed = 10f;
-
-    private VehicleController vehicleController;
-
-    public override void OnStart()
-    {
-        if (vehicle != null)
-        {
-            vehicleController = vehicle.GetComponent<VehicleController>();
-        }
-    }
+    [InParam("targetPosition")]
+    public Vector3 targetPosition;
 
     public override TaskStatus OnUpdate()
     {
-        if (vehicleController == null) return TaskStatus.FAILED;
+        if (vehicle == null) return TaskStatus.FAILED;
 
-        // 移动到鼠标点击位置
-        Vector3 direction = (gatherPoint - vehicle.transform.position).normalized;
-        vehicleController.Move(direction, 0);
+        Vector3 direction = (targetPosition - vehicle.transform.position).normalized;
+        vehicle.transform.Translate(direction * Time.deltaTime * 5f);
+
+        if (Vector3.Distance(vehicle.transform.position, targetPosition) < 1f)
+        {
+            return TaskStatus.COMPLETED;
+        }
+
         return TaskStatus.RUNNING;
     }
 }

@@ -5,42 +5,32 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Action("Behavior/Patrol")]
+[Action("Vehicle/Patrol")]
 public class Patrol : BasePrimitiveAction
 {
     [InParam("vehicle")]
     public GameObject vehicle;
 
     [InParam("waypoints")]
-    public Transform[] waypoints;
+    public List<Transform> waypoints;
 
-    [InParam("speed")]
-    public float speed = 10f;
-
-    private int currentWaypoint = 0;
-    private VehicleController vehicleController;
-
-    public override void OnStart()
-    {
-        if (vehicle != null)
-        {
-            vehicleController = vehicle.GetComponent<VehicleController>();
-        }
-    }
+    private int currentWaypointIndex = 0;
 
     public override TaskStatus OnUpdate()
     {
-        if (vehicleController == null || waypoints == null || waypoints.Length == 0) return TaskStatus.FAILED;
+        if (vehicle == null || waypoints == null || waypoints.Count == 0) return TaskStatus.FAILED;
 
-        // 移动到当前巡逻点
-        Vector3 direction = (waypoints[currentWaypoint].position - vehicle.transform.position).normalized;
-        vehicleController.Move(direction, 0);
+        Transform targetWaypoint = waypoints[currentWaypointIndex];
+        Vector3 direction = (targetWaypoint.position - vehicle.transform.position).normalized;
 
-        // 到达目标点后切换到下一个目标点
-        if (Vector3.Distance(vehicle.transform.position, waypoints[currentWaypoint].position) < 1f)
+        vehicle.transform.Translate(direction * Time.deltaTime * 5f);
+
+        if (Vector3.Distance(vehicle.transform.position, targetWaypoint.position) < 1f)
         {
-            currentWaypoint = (currentWaypoint + 1) % waypoints.Length;
+            currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
         }
+
         return TaskStatus.RUNNING;
     }
 }
+

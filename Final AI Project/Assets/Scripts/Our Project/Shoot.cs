@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Action("Behavior/Shoot")]
+[Action("Vehicle/Shoot")]
 public class Shoot : BasePrimitiveAction
 {
     [InParam("vehicle")]
@@ -20,33 +20,24 @@ public class Shoot : BasePrimitiveAction
     [InParam("shootForce")]
     public float shootForce = 20f;
 
-    private VehicleController vehicleController;
-
-    public override void OnStart()
-    {
-        if (vehicle != null)
-        {
-            vehicleController = vehicle.GetComponent<VehicleController>();
-        }
-    }
+    [OutParam("hasShot")]
+    public bool hasShot; // 输出参数，标志射击是否完成
 
     public override TaskStatus OnUpdate()
     {
-        if (vehicleController == null || bulletPrefab == null || enemy == null)
+        if (vehicle == null || enemy == null || bulletPrefab == null)
+        {
+            hasShot = false; // 如果射击失败，确保状态更新
             return TaskStatus.FAILED;
+        }
 
         // 朝敌人射击
         Vector3 direction = (enemy.transform.position - vehicle.transform.position).normalized;
-        //GameObject bullet = Instantiate(bulletPrefab, vehicle.transform.position + vehicle.transform.forward, vehicle.transform.rotation);
+        GameObject bullet = Object.Instantiate(bulletPrefab, vehicle.transform.position, Quaternion.identity);
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        rb.AddForce(direction * shootForce, ForceMode.Impulse);
 
-        //// 给子弹添加力
-        //Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
-        //if (bulletRb != null)
-        //{
-        //    bulletRb.AddForce(direction * shootForce, ForceMode.Impulse);
-        //}
-
-        return TaskStatus.RUNNING;
+        hasShot = true; // 更新状态，标志射击完成
+        return TaskStatus.COMPLETED; // 返回完成状态
     }
 }
-
