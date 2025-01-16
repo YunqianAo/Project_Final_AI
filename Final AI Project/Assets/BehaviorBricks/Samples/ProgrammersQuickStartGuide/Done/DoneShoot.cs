@@ -1,44 +1,109 @@
-﻿using Pada1.BBCore;           // Code attributes
-using Pada1.BBCore.Tasks;     // TaskStatus
+﻿using UnityEngine;
+using UnityEngine.AI;
+using Pada1.BBCore.Tasks;
+using Pada1.BBCore.Framework;
+using Pada1.BBCore;
 
-namespace BBSamples.PQSG // Programmers Quick Start Guide
+[Action("Combat/AutoShoot")]
+public class AutoShoot : BasePrimitiveAction
 {
-    /// <summary>
-    /// DoneShootOnce is a action inherited from DoneShootOnce and Periodically clones a 'bullet' and
-    /// shoots it throught the Forward axis with the specified velocity. This action never ends.
-    /// </summary>
-    [Action("Samples/ProgQuickStartGuide/Shoot")]
-    [Help("Periodically clones a 'bullet' and shoots it throught the Forward axis " +
-          "with the specified velocity. This action never ends.")]
-    public class DoneShoot : DoneShootOnce
+    [InParam("projectilePrefab")]
+    public GameObject projectilePrefab;
+
+    [InParam("shooter")]
+    public GameObject shooter;
+
+    [InParam("enemy")]
+    public GameObject enemy;
+
+    [OutParam("hasShot")]
+    public bool hasShot;
+
+    [InParam("fireRate", DefaultValue = 30)]
+    public int fireRate;
+
+    [InParam("projectileSpeed", DefaultValue = 20f)]
+    public float projectileSpeed;
+
+    [InParam("spawnHeightOffset", DefaultValue = 2f)]
+    public float spawnHeightOffset;
+
+    [InParam("rotationSpeed", DefaultValue = 1f)]
+    public float rotationSpeed = 1f;
+
+    [InParam("minAngleToShoot", DefaultValue = 5f)]
+    public float minAngleToShoot = 5f;
+
+    private int timeSinceLastShot = 0;
+
+    public override TaskStatus OnUpdate()
     {
-        ///<value>Input delay Parameter, 30 by default.</value>
-        // Define the input parameter delay, with the waited game loops between shoots.
-        [InParam("delay", DefaultValue = 30)]
-        public int delay;
+        if (shooter == null || enemy == null) return TaskStatus.RUNNING;
 
-        // Game loops since the last shoot.
-        private int elapsed = 0;
+        // Calcular la dirección hacia el enemigo
+        Vector3 directionToEnemy = (enemy.transform.position - shooter.transform.position).normalized;
+        Quaternion targetRotation = Quaternion.LookRotation(directionToEnemy);
 
+        // Rotar suavemente el tanque hacia el objetivo
+        shooter.transform.rotation = Quaternion.Slerp(
+            shooter.transform.rotation,
+            targetRotation,
+            Time.deltaTime * rotationSpeed
+        );
 
-        /// <summary>Update method of DoneShoot.</summary>
-        /// <returns>Return Running task.</returns>
-        // Main class method, invoked by the execution engine.
-        public override TaskStatus OnUpdate()
+        // Calcular el ángulo actual hacia el objetivo
+        float currentAngle = Vector3.Angle(shooter.transform.forward, directionToEnemy);
+
+        // Si no estamos lo suficientemente alineados, seguir rotando
+        if (currentAngle > minAngleToShoot)
         {
-            if (delay > 0)
+            return TaskStatus.RUNNING;
+        }
+
+        // Control de ratio de disparo
+        if (fireRate > 0)
+        {
+            ++timeSinceLastShot;
+            timeSinceLastShot %= fireRate;
+
+            if (timeSinceLastShot != 0)
+                return TaskStatus.RUNNING;
+        }
+
+        if (projectilePrefab != null)
+        {
+            // Calcular posición de spawn con offset en Y
+            Vector3 spawnPosition = shooter.transform.position + new Vector3(0, spawnHeightOffset, 0);
+
+            // Crear la bala usando la rotación actual del tanque
+            GameObject bullet = GameObject.Instantiate(projectilePrefab, spawnPosition, shooter.transform.rotation);
+
+            // Configurar Rigidbody
+            Rigidbody rb = bullet.GetComponent<Rigidbody>();
+            if (rb == null)
             {
-                ++elapsed;
-                elapsed %= delay;
-                if (elapsed != 0)
-                    return TaskStatus.RUNNING;
+                rb = bullet.AddComponent<Rigidbody>();
             }
 
-            base.OnUpdate();
-            return TaskStatus.RUNNING;
+            // Configurar el Rigidbody
+            rb.useGravity = false;
+            rb.isKinematic = false;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-        } // OnUpdate
+            // Usar la dirección forward del tanque para el disparo
+            rb.velocity = shooter.transform.forward * projectileSpeed;
 
-    } // class DoneShoot
+            hasShot = true;
+            return TaskStatus.COMPLETED;
+        }
 
-} // namespace
+        return TaskStatus.RUNNING;
+    }
+
+    public override void OnStart()
+    {
+        base.OnStart();
+        hasShot = false;
+    }
+}

@@ -12,7 +12,7 @@ public class EnemyDetected : ConditionBase
     public GameObject enemy;
 
     [InParam("detectionRange")]
-    public float detectionRange = 10f;
+    public float detectionRange = 1000f;
 
     public override bool Check()
     {
