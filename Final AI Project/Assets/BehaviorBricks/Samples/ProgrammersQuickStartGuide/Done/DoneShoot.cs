@@ -16,9 +16,6 @@ public class AutoShoot : BasePrimitiveAction
     [InParam("enemy")]
     public GameObject enemy;
 
-    [OutParam("hasShot")]
-    public bool hasShot;
-
     [InParam("fireRate", DefaultValue = 30)]
     public int fireRate;
 
@@ -73,7 +70,7 @@ public class AutoShoot : BasePrimitiveAction
         if (projectilePrefab != null)
         {
             // Calcular posición de spawn con offset en Y
-            Vector3 spawnPosition = shooter.transform.position + new Vector3(0, spawnHeightOffset, 0);
+            Vector3 spawnPosition = shooter.transform.position + new Vector3(0, spawnHeightOffset, 3);
 
             // Crear la bala usando la rotación actual del tanque
             GameObject bullet = GameObject.Instantiate(projectilePrefab, spawnPosition, shooter.transform.rotation);
@@ -94,16 +91,10 @@ public class AutoShoot : BasePrimitiveAction
             // Usar la dirección forward del tanque para el disparo
             rb.velocity = shooter.transform.forward * projectileSpeed;
 
-            hasShot = true;
             return TaskStatus.COMPLETED;
         }
 
         return TaskStatus.RUNNING;
     }
 
-    public override void OnStart()
-    {
-        base.OnStart();
-        hasShot = false;
-    }
 }
